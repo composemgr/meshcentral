@@ -1,0 +1,34 @@
+services:
+  meshcentral:
+    image: typhonragewind/meshcentral:mongodb-latest
+    container_name: typhonragewind-meshcentral-latest
+    restart: always
+    pull_policy: always
+    hostname: meshcentral
+    depends_on:
+      - 'mongodb'
+    ports:
+      - 172.17.0.1:50048:443                     # MeshCentral will moan and try everything not to use port 80, but you can also use it if you so desire, just change the config.json according to your needs
+    environment:
+      - HOSTNAME=mgmnt.msp.casjay.pro    # your hostname
+      - REVERSE_PROXY=172.17.0.1         # set to your reverse proxy IP if you want to put meshcentral behind a reverse proxy
+      - REVERSE_PROXY_TLS_PORT=443       # do not change 
+      - IFRAME=true                      # set to true if you wish to enable iframe support
+      - ALLOW_NEW_ACCOUNTS=true          # set to false if you want disable self-service creation of new accounts besides the first (admin)
+      - WEBRTC=true                      # set to true to enable WebRTC - per documentation it is not officially released with meshcentral, but is solid enough to work with. Use with caution
+      - NODE_ENV=production
+    volumes:
+      - "/var/lib/srv/$USER/docker/typhonragewind/meshcentral/latest/rootfs/data/meshcentral:/opt/meshcentral/meshcentral-data"
+      - "/var/lib/srv/$USER/docker/typhonragewind/meshcentral/latest/rootfs/config/meshcentral:/opt/meshcentral/meshcentral-files"
+  
+  mongodb:
+    container_name: typhonragewind-meshcentral-mongodb-latest
+    restart: always
+    image: mongo:latest
+    expose:
+      - 27017
+    volumes:
+      - "/var/lib/srv/$USER/docker/typhonragewind/meshcentral/latest/rootfs/data/db/mongodb:/data/db"
+
+networks:
+  meshcentral:

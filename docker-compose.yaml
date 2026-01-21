@@ -1,0 +1,63 @@
+# nginx proxy address - http://172.17.0.1:50048
+
+name: meshcentral
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  app:
+    image: typhonragewind/meshcentral:preloadlibs-latest
+    container_name: meshcentral-app
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      REVERSE_PROXY: ${BASE_HOST_NAME:-$HOSTNAME}
+      WEBRTC: true
+      IFRAME: false
+      ALLOW_NEW_ACCOUNTS: false
+      NODE_ENV: production
+      REVERSE_PROXY_TLS_PORT: 443
+      USE_MONGODB: true
+      MONGO_URL: mongodb://meshcentral-db:27017
+      BACKUP_INTERVAL: 24
+      BACKUP_KEEP_DAYS: 3
+      BACKUPS_PW: ${APP_SECRET_KEY:-changeme_backup_password}
+    ports:
+      - 172.17.0.1:50048:443
+    volumes:
+      - './rootfs/data/meshcentral:/opt/meshcentral/meshcentral-data'
+      - './rootfs/config/meshcentral:/opt/meshcentral/meshcentral-files'
+    depends_on:
+      db:
+        condition: service_started
+    networks:
+      - meshcentral
+
+  db:
+    image: mongo:latest
+    container_name: meshcentral-db
+    hostname: meshcentral-db
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      GLIBC_TUNABLES: glibc.pthread.rseq=0
+    expose:
+      - 27017
+    volumes:
+      - './rootfs/db/mongodb/meshcentral:/data/db'
+    networks:
+      - meshcentral
+
+networks:
+  meshcentral:
+    name: meshcentral
+    external: false

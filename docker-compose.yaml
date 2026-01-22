@@ -53,7 +53,7 @@ services:
     expose:
       - 27017
     volumes:
-      - './rootfs/db/mongodb/meshcentral:/data/db'
+      - './rootfs/data/db/mongodb/meshcentral:/data/db'
     networks:
       - meshcentral
 

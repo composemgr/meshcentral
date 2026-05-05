@@ -51,9 +51,9 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/data/meshcentral` - Data storage
-- `./rootfs/config/meshcentral` - Data storage
-- `./rootfs/data/db/mongodb/meshcentral` - Data storage
+- `./volumes/data/meshcentral` - Data storage
+- `./volumes/config/meshcentral` - Data storage
+- `./volumes/data/db/mongodb/meshcentral` - Data storage
 
 ## 🔐 Security
 

@@ -17,6 +17,7 @@ services:
     logging: *default-logging
     environment:
       TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: meshcentral-app
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
       REVERSE_PROXY: ${BASE_HOST_NAME:-$HOSTNAME}
       WEBRTC: true
@@ -39,6 +40,24 @@ services:
         condition: service_started
     networks:
       - meshcentral
+      - proxy
+      - cloudflare
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://meshcentral-app:443'
+      - 'cloudflare.hostname=meshcentral.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.meshcentral-app.entrypoints=http'
+      - 'traefik.http.routers.meshcentral-app-secure.tls=true'
+      - 'traefik.http.routers.meshcentral-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.meshcentral-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.meshcentral-app.middlewares=meshcentral-app-https-redirect'
+      - 'traefik.http.routers.meshcentral-app-secure.entrypoints=https'
+      - 'traefik.http.routers.meshcentral-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.meshcentral-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.meshcentral-app-secure.service=meshcentral-app'
+      - 'traefik.http.services.meshcentral-app.loadbalancer.server.port=443'
 
   db:
     image: mongo:latest
@@ -49,6 +68,7 @@ services:
     logging: *default-logging
     environment:
       TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: meshcentral-db
       GLIBC_TUNABLES: glibc.pthread.rseq=0
     expose:
       - 27017
@@ -61,3 +81,7 @@ networks:
   meshcentral:
     name: meshcentral
     external: false
+  proxy:
+    external: true
+  cloudflare:
+    external: true
